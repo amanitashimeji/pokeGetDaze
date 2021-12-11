@@ -1,4 +1,4 @@
-﻿# include <Siv3D.hpp> // OpenSiv3D v0.6.2
+﻿# include <Siv3D.hpp> // OpenSiv3D v0.6.3
 
 uint16 Pokemon_ExistLV_HP(const uint16 &SHP,const uint16 &LV,const uint16 &KoHP) {
 
