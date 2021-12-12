@@ -22,10 +22,9 @@ float PCMTHOD(const uint16& a, const bool& b, const uint16& CatchRATE, const flo
 	const uint16 MaxHP = a * 3;
 	uint16 MinHP = a * 2;
 	if (b) {
-		MinHP = 1;
+		MinHP = 2;
 	}
 	return ((MaxHP - MinHP) * CatchRATE * BoalRATE / MaxHP) * StatusRATE;
-
 
 }
 
