@@ -1,4 +1,4 @@
-# ポケモン捕獲率計算アプリ(ver0.01)
+# ポケモン捕獲率計算アプリ(ver0.02)
 ![sumple](https://user-images.githubusercontent.com/94225744/145669354-0dc17e02-8e2f-4804-8a07-adac9cd144fe.png)
 
 ## 概要
