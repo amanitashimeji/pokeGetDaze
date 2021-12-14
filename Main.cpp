@@ -1,24 +1,27 @@
 ﻿# include <Siv3D.hpp> // OpenSiv3D v0.6.3
 
 
+
+namespace/*関数用*/ {
+	uint16 Pokemon_ExistLV_HP() {}
+	float Pokemon_Capture_Method() {}
+	template<typename T>
+	T Percentage() {}
+};
+
+
+
 uint16 Pokemon_ExistLV_HP(const uint16& SHP, const uint16& LV, const uint16& KoHP) {
 
 	//constexpr uint16 DoryokuHP = 0;//今回は野生ポケモンなので0
 
-	uint16 Answer = ((((SHP * 2) + KoHP) * LV / 100) + (LV + 10));
 
-	return Answer;
+	return ((((SHP * 2) + KoHP) * LV / 100) + (LV + 10));
 
 }
 
 
-template<typename T>
-T Percentage(T a, T b) {//100分率になおす aは対象bは基準
-	return a / b * 100;
-}
-
-
-float PCMTHOD(const uint16& a, const bool& b, const uint16& CatchRATE, const float& BoalRATE, const float& StatusRATE) {//ver0.01で使っている
+float Pokemon_Capture_Method(const uint16& a, const bool& b, const uint16& CatchRATE, const float& BoalRATE, const float& StatusRATE) {//ver0.01で使っている
 	const uint16 MaxHP = a * 3;
 	uint16 MinHP = a * 2;
 	if (b) {
@@ -26,6 +29,14 @@ float PCMTHOD(const uint16& a, const bool& b, const uint16& CatchRATE, const flo
 	}
 	return ((MaxHP - MinHP) * CatchRATE * BoalRATE / MaxHP) * StatusRATE;
 
+
+
+}
+
+template<typename T>
+T Percentage(T a, T b)//100分率表記になおす
+{
+	return a / b * 100;
 }
 
 
@@ -41,6 +52,9 @@ void Main()
 	Window::SetTitle(U"ポケモン捕獲率計算ver.0.01");
 	Window::Resize(420, 600);
 
+
+	//PokemonDate.csvを読み込む処理　
+	
 	const CSV csv{ U"./PokemonDate.csv" };//csv読み込み処理
 	if (not csv) {
 		throw Error{ U"Failed to load `PokemonDate.csv`" };//読み込めなかった場合のエラー処理
@@ -50,6 +64,10 @@ void Main()
 	Array<PokeDate>PokeValue;//PokeValue[i].HP PokeValue[i].CR
 
 	for (auto i : step(csv.rows())) {//csv→Hash,Array
+
+		//行サイズをcsv.rows()で得ているので
+		//形式に沿ってPokemonDate.csvに項目を追加すれば,exeを変えること無く最新データに対応可
+
 		//NameTable.contains(U---);完全一致するテキストの検索;
 		//NameTable[U--];一致テキストのキー(今回は図鑑No兼行番号);
 		NameTable.emplace(csv[i][1], i);
@@ -58,6 +76,8 @@ void Main()
 		kari.CatchRATE = Parse<uint16>(csv[i][3]);
 		PokeValue << kari;
 	}
+
+	//読み込み終了
 
 
 
@@ -195,8 +215,8 @@ void Main()
 			RealUnderHP = Pokemon_ExistLV_HP(PokeValue[NameTable[tex01.text]].SyuzokuHP, Level, 0);
 			RealUpperHP = Pokemon_ExistLV_HP(PokeValue[NameTable[tex01.text]].SyuzokuHP, Level, 31);
 
-			unRs = Percentage(PCMTHOD(RealUnderHP, HPmiri, PokeValue[NameTable[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
-			uPrs = Percentage(PCMTHOD(RealUpperHP, HPmiri, PokeValue[NameTable[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			unRs = Percentage(Pokemon_Capture_Method(RealUnderHP, HPmiri, PokeValue[NameTable[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			uPrs = Percentage(Pokemon_Capture_Method(RealUpperHP, HPmiri, PokeValue[NameTable[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
 
 		}
 		// "Licenses" ボタンが押されたら
