@@ -111,8 +111,8 @@ void Main()
 	size_t index2 = 0;//状態異常
 
 	const Font font{ 25 ,Typeface::CJK_Regular_JP };//計算結果描画
-	float unRs = 0;//HP個体値0の時の捕獲確率(100分率表記済み)
-	float uPrs = 0;//HP個体値31のときの捕獲確率(percentage)
+	float UnderHP_Result = 0;//HP個体値0の時の捕獲確率(100分率表記済み)
+	float UpperHP_Result = 0;//HP個体値31のときの捕獲確率(percentage)
 
 
 	while (System::Update())// メインループ
@@ -128,7 +128,7 @@ void Main()
 		//Print << Cursor::Pos();//GUI配置のためのマウスカーソル座標
 		font(U"ポケモン捕獲率計算ver0.01").draw(40, 20);
 		font(U"推定捕獲率").draw(220, 80);
-		font(U"{:.4f}%\n     ～{:.4f}%"_fmt(unRs, uPrs)).draw(210, 120);//小数点以下4桁まで表示する
+		font(U"{:.4f}%\n     ～{:.4f}%"_fmt(UnderHP_Result, UpperHP_Result)).draw(210, 120);//小数点以下4桁まで表示する
 
 
 		const bool previous = tex01.active;
@@ -197,8 +197,6 @@ void Main()
 			}
 		}
 
-
-
 		if (PokemonNameList.contains(tex01.text) && Level > 0 && Level <= 100) {
 			//入力名が有効かつLevelが有効な数字であるなら
 			KeisanCan = true;//捕獲率計算ボタンを有効にする		
@@ -211,8 +209,8 @@ void Main()
 			RealUnderHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 0);
 			RealUpperHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 31);
 
-			unRs = Percentage(Pokemon_Capture_Method(RealUnderHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
-			uPrs = Percentage(Pokemon_Capture_Method(RealUpperHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			UnderHP_Result = Percentage(Pokemon_Capture_Method(RealUnderHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			UpperHP_Result = Percentage(Pokemon_Capture_Method(RealUpperHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
 
 		}
 		// "Licenses" ボタンが押されたら
