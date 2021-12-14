@@ -29,8 +29,6 @@ float Pokemon_Capture_Method(const uint16& a, const bool& b, const uint16& Catch
 	}
 	return ((MaxHP - MinHP) * CatchRATE * BoalRATE / MaxHP) * StatusRATE;
 
-
-
 }
 
 template<typename T>
@@ -41,7 +39,7 @@ T Percentage(T a, T b)//100分率表記になおす
 
 
 
-struct PokeDate {
+struct Status {
 	uint16 SyuzokuHP;
 	uint16 CatchRATE;
 };
@@ -60,8 +58,8 @@ void Main()
 		throw Error{ U"Failed to load `PokemonDate.csv`" };//読み込めなかった場合のエラー処理
 	}
 
-	HashTable<String, uint16>NameTable; //No=Name
-	Array<PokeDate>PokeValue;//PokeValue[i].HP PokeValue[i].CR
+	HashTable<String, uint16>PokemonNameList; //<ポケモン名,図鑑No>
+	Array<Status>PokemonDate;//PokeValue[i].HP PokeValue[i].CR
 
 	for (auto i : step(csv.rows())) {//csv→Hash,Array
 
@@ -70,11 +68,11 @@ void Main()
 
 		//NameTable.contains(U---);完全一致するテキストの検索;
 		//NameTable[U--];一致テキストのキー(今回は図鑑No兼行番号);
-		NameTable.emplace(csv[i][1], i);
-		PokeDate kari;
+		PokemonNameList.emplace(csv[i][1], i);
+		Status kari;
 		kari.SyuzokuHP = Parse<uint16>(csv[i][2]);
 		kari.CatchRATE = Parse<uint16>(csv[i][3]);
-		PokeValue << kari;
+		PokemonDate << kari;
 	}
 
 	//読み込み終了
@@ -112,7 +110,7 @@ void Main()
 	size_t index1 = 0;//使うボール選択肢
 	size_t index2 = 0;//状態異常
 
-	const Font font{ 25 };//計算結果描画
+	const Font font{ 25 ,Typeface::CJK_Regular_JP };//計算結果描画
 	float unRs = 0;//HP個体値0の時の捕獲確率(100分率表記済み)
 	float uPrs = 0;//HP個体値31のときの捕獲確率(percentage)
 
@@ -175,12 +173,10 @@ void Main()
 				BoalRATE = 5.0F;
 				break;
 			case 4://ダークボール
+			case 5://リピートボール //faulthrough
 				BoalRATE = 3.0F;
 				break;
-			case 5://リピートボール
-				BoalRATE = 3.0F;
-				break;
-			case 6:
+			case 6://タイマーボール10T以降
 				BoalRATE = 4.0F;
 				break;
 			}
@@ -189,13 +185,13 @@ void Main()
 		SimpleGUI::Headline(U"状態異常", Vec2{ 20, 390 });
 		if (SimpleGUI::RadioButtons(index2, Sick, Vec2{ 20, 430 })) {
 			switch (index2) {
-			case 0:
+			case 0://状態異常なし
 				StatusVL = 1.0F;
 				break;
-			case 1:
+			case 1://まひどくやけど
 				StatusVL = 1.5F;
 				break;
-			case 2:
+			case 2://ねむりこおり
 				StatusVL = 2.5F;
 				break;
 			}
@@ -203,7 +199,7 @@ void Main()
 
 
 
-		if (NameTable.contains(tex01.text) && Level > 0 && Level <= 100) {
+		if (PokemonNameList.contains(tex01.text) && Level > 0 && Level <= 100) {
 			//入力名が有効かつLevelが有効な数字であるなら
 			KeisanCan = true;//捕獲率計算ボタンを有効にする		
 		}
@@ -212,11 +208,11 @@ void Main()
 		}
 
 		if (SimpleGUI::Button(U"捕獲率を計算する", Vec2{ 200,555 }, unspecified, KeisanCan)) {
-			RealUnderHP = Pokemon_ExistLV_HP(PokeValue[NameTable[tex01.text]].SyuzokuHP, Level, 0);
-			RealUpperHP = Pokemon_ExistLV_HP(PokeValue[NameTable[tex01.text]].SyuzokuHP, Level, 31);
+			RealUnderHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 0);
+			RealUpperHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 31);
 
-			unRs = Percentage(Pokemon_Capture_Method(RealUnderHP, HPmiri, PokeValue[NameTable[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
-			uPrs = Percentage(Pokemon_Capture_Method(RealUpperHP, HPmiri, PokeValue[NameTable[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			unRs = Percentage(Pokemon_Capture_Method(RealUnderHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			uPrs = Percentage(Pokemon_Capture_Method(RealUpperHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
 
 		}
 		// "Licenses" ボタンが押されたら
