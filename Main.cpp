@@ -60,7 +60,9 @@ T Percentage(T a, T b)//100分率表記になおす
 void Main()
 
 {
-	Window::SetTitle(U"ポケモン捕獲率計算ver.0.01");
+
+	String VersionInfo = U"ポケモン捕獲率計算ver.0.02";
+	Window::SetTitle(VersionInfo);
 	Window::Resize(420, 600);
 
 
@@ -135,7 +137,7 @@ void Main()
 			avtivateNextTextBox = false;
 		}
 		//Print << Cursor::Pos();//GUI配置のためのマウスカーソル座標
-		font(U"ポケモン捕獲率計算ver0.01").draw(40, 20);
+		font(VersionInfo).draw(40, 20);
 		font(U"推定捕獲率").draw(220, 80);
 		font(U"{:.4f}%\n     ～{:.4f}%"_fmt(UnderHP_Result, UpperHP_Result)).draw(210, 120);//小数点以下4桁まで表示する
 
