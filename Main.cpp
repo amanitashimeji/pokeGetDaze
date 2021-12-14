@@ -10,6 +10,24 @@ namespace/*関数用*/ {
 };
 
 
+namespace /*構造体*/ {
+
+	struct Status {
+		uint16 SyuzokuHP;
+		uint16 CatchRATE;
+	};
+
+	struct ActArgmentList {
+		uint16 MaxHP;
+		bool HPFlag;
+		uint16 CatchRATE;
+		float BoalRATE;
+		float StatusRATE;
+	};
+
+
+};
+
 
 uint16 Pokemon_ExistLV_HP(const uint16& SHP, const uint16& LV, const uint16& KoHP) {
 
@@ -21,13 +39,12 @@ uint16 Pokemon_ExistLV_HP(const uint16& SHP, const uint16& LV, const uint16& KoH
 }
 
 
-float Pokemon_Capture_Method(const uint16& a, const bool& b, const uint16& CatchRATE, const float& BoalRATE, const float& StatusRATE) {//ver0.01で使っている
-	const uint16 MaxHP = a * 3;
-	uint16 MinHP = a * 2;
-	if (b) {
+float Pokemon_Capture_Method(const ActArgmentList &a) {
+	uint16 MinHP = a.MaxHP * 2;
+	if (a.HPFlag) {
 		MinHP = 2;
 	}
-	return ((MaxHP - MinHP) * CatchRATE * BoalRATE / MaxHP) * StatusRATE;
+	return (((a.MaxHP*3)- MinHP) * a.CatchRATE * a.BoalRATE / (a.MaxHP*3)) * a.StatusRATE;
 
 }
 
@@ -39,10 +56,6 @@ T Percentage(T a, T b)//100分率表記になおす
 
 
 
-struct Status {
-	uint16 SyuzokuHP;
-	uint16 CatchRATE;
-};
 
 void Main()
 
@@ -59,7 +72,7 @@ void Main()
 	}
 
 	HashTable<String, uint16>PokemonNameList; //<ポケモン名,図鑑No>
-	Array<Status>PokemonDate;//PokeValue[i].HP PokeValue[i].CR
+	Array<Status>PokemonDate;//PokemonDate[i].HP PokemonDate[i].CR
 
 	for (auto i : step(csv.rows())) {//csv→Hash,Array
 
@@ -86,11 +99,6 @@ void Main()
 
 	uint16 Level = 50;//tex02.text(Parse<uint16>),実HP処理関数にわたす
 
-	uint16 RealUnderHP = 0;//HP処理関数の返り値,個体値0
-	uint16 RealUpperHP = 0;//HP処理関数の返り値,個体値31
-	bool HPmiri = false;//false=まんたん,true=HPのこりいち
-	float BoalRATE = 1.0F;//
-	float StatusVL = 1.0F;
 
 	bool KeisanCan = false;//入力値を見て計算可能か判断するフラグ
 
@@ -114,6 +122,7 @@ void Main()
 	float UnderHP_Result = 0;//HP個体値0の時の捕獲確率(100分率表記済み)
 	float UpperHP_Result = 0;//HP個体値31のときの捕獲確率(percentage)
 
+	ActArgmentList PokemonArgment{1,false,3,1,1};
 
 	while (System::Update())// メインループ
 	{
@@ -150,10 +159,10 @@ void Main()
 		SimpleGUI::Headline(U"残りHP", Vec2{ 20, 260 });
 		if (SimpleGUI::RadioButtons(index0, HPdate, Vec2{ 20, 300 })) {
 			if (index0 == 1) {
-				HPmiri = true;
+				PokemonArgment.HPFlag = true;
 			}
 			else if (index0 == 0) {
-				HPmiri = false;
+				PokemonArgment.HPFlag = false;
 			}
 		}
 
@@ -161,23 +170,23 @@ void Main()
 		if (SimpleGUI::RadioButtons(index1, BOAL, Vec2{ 200, 270 })) {
 			switch (index1) {
 			case 0://モンスターボール
-				BoalRATE = 1.0F;
+				PokemonArgment.BoalRATE = 1.0F;
 				break;
 			case 1://スーパーボール
-				BoalRATE = 1.5F;
+				PokemonArgment.BoalRATE = 1.5F;
 				break;
 			case 2://ハイパーボール
-				BoalRATE = 2.0F;
+				PokemonArgment.BoalRATE = 2.0F;
 				break;
 			case 3://クイックボール
-				BoalRATE = 5.0F;
+				PokemonArgment.BoalRATE = 5.0F;
 				break;
 			case 4://ダークボール
 			case 5://リピートボール //faulthrough
-				BoalRATE = 3.0F;
+				PokemonArgment.BoalRATE = 3.0F;
 				break;
 			case 6://タイマーボール10T以降
-				BoalRATE = 4.0F;
+				PokemonArgment.BoalRATE = 4.0F;
 				break;
 			}
 		}
@@ -186,13 +195,13 @@ void Main()
 		if (SimpleGUI::RadioButtons(index2, Sick, Vec2{ 20, 430 })) {
 			switch (index2) {
 			case 0://状態異常なし
-				StatusVL = 1.0F;
+				PokemonArgment.StatusRATE = 1.0F;
 				break;
 			case 1://まひどくやけど
-				StatusVL = 1.5F;
+				PokemonArgment.StatusRATE = 1.5F;
 				break;
 			case 2://ねむりこおり
-				StatusVL = 2.5F;
+				PokemonArgment.StatusRATE = 2.5F;
 				break;
 			}
 		}
@@ -206,11 +215,16 @@ void Main()
 		}
 
 		if (SimpleGUI::Button(U"捕獲率を計算する", Vec2{ 200,555 }, unspecified, KeisanCan)) {
-			RealUnderHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 0);
-			RealUpperHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 31);
+			PokemonArgment.CatchRATE = PokemonDate[PokemonNameList[tex01.text]].CatchRATE;
 
-			UnderHP_Result = Percentage(Pokemon_Capture_Method(RealUnderHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
-			UpperHP_Result = Percentage(Pokemon_Capture_Method(RealUpperHP, HPmiri, PokemonDate[PokemonNameList[tex01.text]].CatchRATE, BoalRATE, StatusVL), 255.0F);
+			//HP種族値0の時
+			PokemonArgment.MaxHP= Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 0);
+			UnderHP_Result = Percentage(Pokemon_Capture_Method(PokemonArgment), 255.0F);
+
+
+			//HP種族値31の時
+			PokemonArgment.MaxHP = Pokemon_ExistLV_HP(PokemonDate[PokemonNameList[tex01.text]].SyuzokuHP, Level, 31);
+			UpperHP_Result = Percentage(Pokemon_Capture_Method(PokemonArgment), 255.0F);
 
 		}
 		// "Licenses" ボタンが押されたら
